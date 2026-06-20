@@ -25,7 +25,7 @@ export default function useHandTracking({
   const lastZoomTime = useRef(0);
   const isZoomingRef = useRef(false);
   const zoomResetTimerRef = useRef(null);
-
+  const thumbsUpStartTime = useRef(null);
   const cameraInstance = useRef(null);
   const handsInstance = useRef(null);
 
@@ -143,39 +143,47 @@ export default function useHandTracking({
       lm[20].y > lm[18].y;
 
     const isThumbsUp = (lm) => {
-      const thumbTop =
-        lm[4].y <
-        Math.min(
-          lm[8].y,
-          lm[12].y,
-          lm[16].y,
-          lm[20].y
-        );
+      const thumbUp =
+        lm[4].y < lm[3].y &&
+        lm[3].y < lm[2].y;
 
-      const fingersFolded =
-        lm[8].y > lm[6].y &&
-        lm[12].y > lm[10].y &&
-        lm[16].y > lm[14].y &&
+      const indexFolded =
+        lm[8].y > lm[6].y;
+
+      const middleFolded =
+        lm[12].y > lm[10].y;
+
+      const ringFolded =
+        lm[16].y > lm[14].y;
+
+      const pinkyFolded =
         lm[20].y > lm[18].y;
 
+      const thumbFarFromIndex =
+        Math.abs(lm[4].x - lm[8].x) > 0.12;
+
       return (
-        thumbTop &&
-        fingersFolded
+        thumbUp &&
+        indexFolded &&
+        middleFolded &&
+        ringFolded &&
+        pinkyFolded &&
+        thumbFarFromIndex
       );
     };
 
     const isZoomInGesture = (lm) =>
-        lm[8].y < lm[6].y &&     // index open
-        lm[20].y < lm[18].y &&   // pinky open
-        lm[12].y > lm[10].y &&   // middle folded
-        lm[16].y > lm[14].y;     // ring folded
+      lm[8].y < lm[6].y &&     // index open
+      lm[20].y < lm[18].y &&   // pinky open
+      lm[12].y > lm[10].y &&   // middle folded
+      lm[16].y > lm[14].y;     // ring folded
 
-      const isFist = (lm) =>
-        lm[8].y > lm[6].y &&
-        lm[12].y > lm[10].y &&
-        lm[16].y > lm[14].y &&
-        lm[20].y > lm[18].y;
-
+    const isFist = (lm) =>
+      lm[8].y > lm[6].y &&
+      lm[12].y > lm[10].y &&
+      lm[16].y > lm[14].y &&
+      lm[20].y > lm[18].y &&
+      lm[4].x > lm[3].x;
     // ==========================
     // Cursor
     // ==========================
@@ -238,8 +246,8 @@ export default function useHandTracking({
     hands.setOptions({
       maxNumHands: 1,
       modelComplexity: 1,
-      minDetectionConfidence: 0.75,
-      minTrackingConfidence: 0.75,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6,
     });
 
     handsInstance.current = hands;
@@ -345,7 +353,7 @@ export default function useHandTracking({
         const prev =
           prevPoint.current;
 
-        const smoothFactor = 0.6;
+        const smoothFactor = 1;
 
         const smoothX =
           prev.x === null
@@ -368,18 +376,23 @@ export default function useHandTracking({
 
         // Screenshot Gesture 👍
 
-        if (
-          isThumbsUp(hand) &&
-          now - lastScreenshotTime.current > 2000
-        ) {
+        if (isThumbsUp(hand)) {
           current = "Screenshot 📸";
 
-          console.log("Screenshot Triggered");
+          if (!thumbsUpStartTime.current) {
+            thumbsUpStartTime.current = now;
+          }
 
-          handleScreenshot?.();
-
-          lastScreenshotTime.current = now;
+          if (
+            now - thumbsUpStartTime.current > 1000 &&
+            now - lastScreenshotTime.current > 2000
+          ) {
+            handleScreenshot?.();
+            lastScreenshotTime.current = now;
+            thumbsUpStartTime.current = null;
+          }
         }
+
 
         // Color Change
 
@@ -586,6 +599,7 @@ export default function useHandTracking({
           setGesture(
             "No Hand ✋"
           );
+          console.log("HAND LOST");
         }
       }
     });
