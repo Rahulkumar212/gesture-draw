@@ -17,9 +17,14 @@ export default function useHandTracking({
   setColor,
   setGesture,
   cameraReady,
-  saveScreenshot: handleScreenshot
+  saveScreenshot: handleScreenshot,
+  zoom,
+  setZoom,
 }) {
   const ctxRef = useRef(null);
+  const lastZoomTime = useRef(0);
+  const isZoomingRef = useRef(false);
+  const zoomResetTimerRef = useRef(null);
 
   const cameraInstance = useRef(null);
   const handsInstance = useRef(null);
@@ -118,6 +123,13 @@ export default function useHandTracking({
       return extended >= 4;
     };
 
+    const getDistance = (p1, p2) => {
+      return Math.sqrt(
+        Math.pow(p2.x - p1.x, 2) +
+        Math.pow(p2.y - p1.y, 2)
+      );
+    };
+
     const isWritingPose = (lm) =>
       lm[8].y < lm[6].y &&
       lm[12].y > lm[10].y &&
@@ -151,6 +163,18 @@ export default function useHandTracking({
         fingersFolded
       );
     };
+
+    const isZoomInGesture = (lm) =>
+        lm[8].y < lm[6].y &&     // index open
+        lm[20].y < lm[18].y &&   // pinky open
+        lm[12].y > lm[10].y &&   // middle folded
+        lm[16].y > lm[14].y;     // ring folded
+
+      const isFist = (lm) =>
+        lm[8].y > lm[6].y &&
+        lm[12].y > lm[10].y &&
+        lm[16].y > lm[14].y &&
+        lm[20].y > lm[18].y;
 
     // ==========================
     // Cursor
@@ -309,6 +333,15 @@ export default function useHandTracking({
         const y =
           tip.y * rect.height;
 
+        const thumbTip = hand[4];
+        const indexTip = hand[8];
+
+        const pinchDistance =
+          getDistance(
+            thumbTip,
+            indexTip
+          );
+
         const prev =
           prevPoint.current;
 
@@ -350,7 +383,7 @@ export default function useHandTracking({
 
         // Color Change
 
-        if (
+        else if (
           isTwoFingersUp(hand) &&
           now -
           lastGestureTime.current >
@@ -371,11 +404,69 @@ export default function useHandTracking({
           lastGestureTime.current =
             now;
         }
+        else if (
+          isZoomInGesture(hand) &&
+          now - lastZoomTime.current > 500
+        ) {
+          current = "Zoom In 🔍";
+
+          isZoomingRef.current = true;
+
+          clearTimeout(
+            zoomResetTimerRef.current
+          );
+
+          zoomResetTimerRef.current =
+            setTimeout(() => {
+              isZoomingRef.current = false;
+            }, 300);
+
+          setZoom((prev) =>
+            Math.min(prev + 0.2, 3)
+          );
+
+          prevPoint.current = {
+            x: null,
+            y: null,
+          };
+
+          lastZoomTime.current = now;
+        }
+
+        else if (
+          isFist(hand) &&
+          now - lastZoomTime.current > 500
+        ) {
+          current = "Zoom Out 🔎";
+
+          isZoomingRef.current = true;
+
+          clearTimeout(
+            zoomResetTimerRef.current
+          );
+
+          zoomResetTimerRef.current =
+            setTimeout(() => {
+              isZoomingRef.current = false;
+            }, 300);
+
+          setZoom((prev) =>
+            Math.max(prev - 0.2, 1)
+          );
+
+          prevPoint.current = {
+            x: null,
+            y: null,
+          };
+
+          lastZoomTime.current = now;
+        }
 
         // Drawing
 
-        if (
-          isWritingPose(hand)
+        else if (
+          isWritingPose(hand) &&
+          !isZoomingRef.current
         ) {
           current =
             "Drawing ✍️";
@@ -423,7 +514,8 @@ export default function useHandTracking({
         // Eraser
 
         else if (
-          isPalmOpen(hand)
+          isPalmOpen(hand) &&
+          !isZoomingRef.current
         ) {
           current =
             "Erasing 🖐️";

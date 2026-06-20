@@ -8,9 +8,14 @@ export default function GestureInfo({
         {gesture}
       </h2>
 
-      <p className="text-xs md:text-sm text-gray-300 mt-1">
-        ✍️ Draw | ✌️ Color | 🖐️ Erase | 👍 Screenshot
-      </p>
+      <div className="mt-2 text-xs md:text-sm text-gray-300 flex flex-wrap gap-3">
+        <span>✍️ Draw</span>
+        <span>✌️ Color</span>
+        <span>🖐️ Erase</span>
+        <span>👍 Screenshot</span>
+        <span>🤟 Zoom In</span>
+        <span>👊 Zoom Out</span>
+      </div>
 
     </div>
   );

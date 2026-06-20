@@ -15,6 +15,9 @@ export default function App() {
   const overlayCanvasRef =
     useRef(null);
 
+  const [zoom, setZoom] =
+    useState(1);
+
   const [gesture, setGesture] =
     useState("Stop ✊");
 
@@ -52,7 +55,9 @@ export default function App() {
     setColor,
     setGesture,
     cameraReady,
-    saveScreenshot: handleScreenshot
+    saveScreenshot: handleScreenshot,
+    zoom,
+    setZoom,
   });
 
 
@@ -63,7 +68,10 @@ export default function App() {
       <div className="absolute left-4 bottom-4 z-50">
         <CameraView
           videoRef={videoRef}
-          overlayCanvasRef={overlayCanvasRef}
+          overlayCanvasRef={
+            overlayCanvasRef
+          }
+          zoom={zoom}
         />
       </div>
 
