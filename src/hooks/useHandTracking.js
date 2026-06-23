@@ -66,40 +66,19 @@ export default function useHandTracking({
       const overlayCanvas =
         overlayCanvasRef?.current;
 
-      console.log("overlayCanvas", overlayCanvas);
-
-      const isMobile =
-        window.innerWidth < 768;
-
       const rect =
         canvas.getBoundingClientRect();
 
-      let x;
-let y;
+      canvas.width = rect.width;
+      canvas.height = rect.height;
 
-if (isPinching(hand)) {
-  const pinchCenterX =
-    (hand[4].x + hand[8].x) / 2;
+      if (overlayCanvas) {
+        overlayCanvas.width =
+          rect.width;
 
-  const pinchCenterY =
-    (hand[4].y + hand[8].y) / 2;
-
-  x =
-    (1 - pinchCenterX) *
-    rect.width;
-
-  y =
-    pinchCenterY *
-    rect.height;
-} else {
-  x =
-    (1 - hand[8].x) *
-    rect.width;
-
-  y =
-    hand[8].y *
-    rect.height;
-}
+        overlayCanvas.height =
+          rect.height;
+      }
     };
 
     resizeCanvas();
@@ -152,11 +131,11 @@ if (isPinching(hand)) {
 
     const isPinching = (lm) => {
       const distance = getDistance(
-        lm[4], // thumb tip
-        lm[8]  // index tip
+        lm[4],
+        lm[8]
       );
 
-      return distance < 0.05;
+      return distance < 0.08;
     };
 
     const isWritingPose = (lm) =>
@@ -362,27 +341,34 @@ if (isPinching(hand)) {
         const rect =
           canvas.getBoundingClientRect();
 
-        // Pinch center (thumb + index)
-        const pinchCenterX =
-          (hand[4].x + hand[8].x) / 2;
+        let x;
+        let y;
 
-        const pinchCenterY =
-          (hand[4].y + hand[8].y) / 2;
+        if (isPinching(hand)) {
+          const pinchCenterX =
+            (hand[4].x + hand[8].x) / 2;
 
-        const x =
-          (1 - pinchCenterX) * rect.width;
+          const pinchCenterY =
+            (hand[4].y + hand[8].y) / 2;
 
-        const y =
-          pinchCenterY * rect.height;
+          x =
+            (1 - pinchCenterX) *
+            rect.width;
 
-        const thumbTip = hand[4];
-        const indexTip = hand[8];
+          y =
+            pinchCenterY *
+            rect.height;
+        } else {
+          x =
+            (1 - hand[8].x) *
+            rect.width;
 
-        const pinchDistance =
-          getDistance(
-            thumbTip,
-            indexTip
-          );
+          y =
+            hand[8].y *
+            rect.height;
+        }
+
+
 
         const prev =
           prevPoint.current;
