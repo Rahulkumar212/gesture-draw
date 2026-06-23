@@ -66,6 +66,11 @@ export default function useHandTracking({
       const overlayCanvas =
         overlayCanvasRef?.current;
 
+      console.log("overlayCanvas", overlayCanvas);
+
+      const isMobile =
+        window.innerWidth < 768;
+
       const rect =
         canvas.getBoundingClientRect();
 
@@ -73,11 +78,8 @@ export default function useHandTracking({
       canvas.height = rect.height;
 
       if (overlayCanvas) {
-        overlayCanvas.width =
-          rect.width;
-
-        overlayCanvas.height =
-          rect.height;
+        overlayCanvas.width = rect.width;
+        overlayCanvas.height = rect.height;
       }
     };
 
@@ -122,27 +124,14 @@ export default function useHandTracking({
       return extended >= 4;
     };
 
-    const getDistance = (p1, p2) => {
-      return Math.sqrt(
-        Math.pow(p2.x - p1.x, 2) +
-        Math.pow(p2.y - p1.y, 2)
-      );
-    };
 
-    const isPinching = (lm) => {
-      const distance = getDistance(
-        lm[4],
-        lm[8]
-      );
-
-      return distance < 0.08;
-    };
 
     const isWritingPose = (lm) =>
-      lm[8].y < lm[6].y &&
-      lm[12].y > lm[10].y &&
-      lm[16].y > lm[14].y &&
-      lm[20].y > lm[18].y;
+      lm[8].y < lm[6].y &&     // index open
+      lm[12].y > lm[10].y &&   // middle closed
+      lm[16].y > lm[14].y &&   // ring closed
+      lm[20].y > lm[18].y;     // pinky closed
+
 
     const isTwoFingersUp = (lm) =>
       lm[8].y < lm[6].y &&
@@ -338,36 +327,16 @@ export default function useHandTracking({
           );
         }
 
+        const tip = hand[8];
+
         const rect =
           canvas.getBoundingClientRect();
 
-        let x;
-        let y;
+        const x =
+          (1 - tip.x) * rect.width;
 
-        if (isPinching(hand)) {
-          const pinchCenterX =
-            (hand[4].x + hand[8].x) / 2;
-
-          const pinchCenterY =
-            (hand[4].y + hand[8].y) / 2;
-
-          x =
-            (1 - pinchCenterX) *
-            rect.width;
-
-          y =
-            pinchCenterY *
-            rect.height;
-        } else {
-          x =
-            (1 - hand[8].x) *
-            rect.width;
-
-          y =
-            hand[8].y *
-            rect.height;
-        }
-
+        const y =
+          tip.y * rect.height;
 
 
         const prev =
@@ -498,7 +467,7 @@ export default function useHandTracking({
         // Drawing
 
         else if (
-          isPinching(hand) &&
+          isWritingPose(hand) &&
           !isZoomingRef.current
         ) {
           current =
