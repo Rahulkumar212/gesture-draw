@@ -74,13 +74,27 @@ export default function useHandTracking({
       const rect =
         canvas.getBoundingClientRect();
 
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      let cursorX;
+      let cursorY;
 
-      if (overlayCanvas) {
-        overlayCanvas.width = rect.width;
-        overlayCanvas.height = rect.height;
+      if (isPinching(hand)) {
+        cursorX =
+          (1 - ((hand[4].x + hand[8].x) / 2)) *
+          rect.width;
+
+        cursorY =
+          ((hand[4].y + hand[8].y) / 2) *
+          rect.height;
+      } else {
+        cursorX =
+          (1 - hand[8].x) * rect.width;
+
+        cursorY =
+          hand[8].y * rect.height;
       }
+
+      const x = cursorX;
+      const y = cursorY;
     };
 
     resizeCanvas();
@@ -340,16 +354,21 @@ export default function useHandTracking({
           );
         }
 
-        const tip = hand[8];
-
         const rect =
           canvas.getBoundingClientRect();
 
+        // Pinch center (thumb + index)
+        const pinchCenterX =
+          (hand[4].x + hand[8].x) / 2;
+
+        const pinchCenterY =
+          (hand[4].y + hand[8].y) / 2;
+
         const x =
-          (1 - tip.x) * rect.width;
+          (1 - pinchCenterX) * rect.width;
 
         const y =
-          tip.y * rect.height;
+          pinchCenterY * rect.height;
 
         const thumbTip = hand[4];
         const indexTip = hand[8];
