@@ -9,8 +9,8 @@ export default function GestureInfo({
       </h2>
 
       <div className="mt-2 text-xs md:text-sm text-gray-300 flex flex-wrap gap-3">
-        <span>✍️ Draw</span>
-        <span>✌️ Color</span>
+        <span>🤏 Pinch Draw</span>
+        <span>✌️ Change Color</span>
         <span>🖐️ Erase</span>
         <span>👍 Screenshot</span>
         <span>🤟 Zoom In</span>

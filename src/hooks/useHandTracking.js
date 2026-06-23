@@ -28,6 +28,7 @@ export default function useHandTracking({
   const thumbsUpStartTime = useRef(null);
   const cameraInstance = useRef(null);
   const handsInstance = useRef(null);
+  const isDrawingRef = useRef(false);
 
   const prevPoint = useRef({
     x: null,
@@ -128,6 +129,15 @@ export default function useHandTracking({
         Math.pow(p2.x - p1.x, 2) +
         Math.pow(p2.y - p1.y, 2)
       );
+    };
+
+    const isPinching = (lm) => {
+      const distance = getDistance(
+        lm[4], // thumb tip
+        lm[8]  // index tip
+      );
+
+      return distance < 0.05;
     };
 
     const isWritingPose = (lm) =>
@@ -478,7 +488,7 @@ export default function useHandTracking({
         // Drawing
 
         else if (
-          isWritingPose(hand) &&
+          isPinching(hand) &&
           !isZoomingRef.current
         ) {
           current =
