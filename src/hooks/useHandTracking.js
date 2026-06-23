@@ -74,27 +74,32 @@ export default function useHandTracking({
       const rect =
         canvas.getBoundingClientRect();
 
-      let cursorX;
-      let cursorY;
+      let x;
+let y;
 
-      if (isPinching(hand)) {
-        cursorX =
-          (1 - ((hand[4].x + hand[8].x) / 2)) *
-          rect.width;
+if (isPinching(hand)) {
+  const pinchCenterX =
+    (hand[4].x + hand[8].x) / 2;
 
-        cursorY =
-          ((hand[4].y + hand[8].y) / 2) *
-          rect.height;
-      } else {
-        cursorX =
-          (1 - hand[8].x) * rect.width;
+  const pinchCenterY =
+    (hand[4].y + hand[8].y) / 2;
 
-        cursorY =
-          hand[8].y * rect.height;
-      }
+  x =
+    (1 - pinchCenterX) *
+    rect.width;
 
-      const x = cursorX;
-      const y = cursorY;
+  y =
+    pinchCenterY *
+    rect.height;
+} else {
+  x =
+    (1 - hand[8].x) *
+    rect.width;
+
+  y =
+    hand[8].y *
+    rect.height;
+}
     };
 
     resizeCanvas();
